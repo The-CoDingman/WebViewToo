@@ -1,6 +1,6 @@
 ;Environment Controls
 ;///////////////////////////////////////////////////////////////////////////////////////////
-#Requires Autohotkey v2+
+#Requires Autohotkey v2.1-alpha.1 ;Sorry! You'll have to use the Alpha with this latest version: https://www.autohotkey.com/download/2.1/AutoHotkey_2.1-alpha.1.1.zip
 #SingleInstance Force
 #Include AHK Resources/WebView2.ahk
 #Include AHK Resources/WebViewToo.ahk
@@ -11,14 +11,14 @@ GroupAdd("ScriptGroup", "ahk_pid" ScriptPID)
 
 ;Create the WebviewWindow/GUI
 ;///////////////////////////////////////////////////////////////////////////////////////////
-MyWindow := WebviewWindow()
+MyWindow := WebViewToo(,,, True) ;You can omit the final parameter or switch 'True' to 'False' to use a Native Window's Titlebar
 MyWindow.OnEvent("Close", (*) => ExitApp())
 MyWindow.Load("Pages/index.html")
 MyWindow.Debug()
 MyWindow.AddHostObjectToScript("ahkButtonClick", {func:WebButtonClickEvent})
-MyWindow.AddHostObjectToScript("ahkCopyGlyphCode", {func:CopyGlyphCodeEvent})
-MyWindow.AddHostObjectToScript("ahkTooltip", {func:WebTooltipEvent})
-MyWindow.AddHostObjectToScript("ahkFormSubmit", {func:FormSubmitEvent})
+MyWindow.AddCallBackToScript("CopyGlyphCode", CopyGlyphCodeEvent)
+MyWindow.AddCallBackToScript("Tooltip", WebTooltipEvent)
+MyWindow.AddCallbackToScript("ahkFormSubmit", FormSubmitHandler)
 MyWindow.Show("w1200 h800 Center", "WebViewToo Example")
 ;///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -34,6 +34,10 @@ F1:: {
 F2:: {
     MyWindow.PostWebMessageAsString("Hello?")
 }
+
+F3:: {
+    MyWindow.SimplePrintToPdf()
+}
 #HotIf
 ;///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,11 +47,9 @@ WebButtonClickEvent(button) {
     MsgBox(button)
 }
 
-CopyGlyphCodeEvent(title) {
-	GlyphCode := "<span class='glyphicon glyphicon-" title "' aria-hidden='true'></span>"
-	A_Clipboard := GlyphCode
-	ClipWait(2)
-	MsgBox(GlyphCode, "OuterHTML Copied to Clipboard")
+CopyGlyphCodeEvent(WebView, Title) {
+	GlyphCode := "<span class='glyphicon glyphicon-" Title "' aria-hidden='true'></span>"
+	MsgBox(A_Clipboard := GlyphCode, "OuterHTML Copied to Clipboard")
 }
 
 WebTooltipEvent(WebView, Msg) {
@@ -55,14 +57,23 @@ WebTooltipEvent(WebView, Msg) {
     SetTimer((*) => ToolTip(), -1000)
 }
 
-FormSubmitEvent(source, form) {
-    if (source = "webpage") {
-        SetTimer((*) => FormSubmitEvent("ahk", form), -1)
-    }
-    else {
-        formValues := MyWindow.GetFormData(form)
-        MsgBox(formValues["inputEmail"])
-        MsgBox(WebviewWindow.forEach(formValues, form))
-    }
+/**
+ * There's something weird about calling WebViewToo methods from within
+ * a defined WebView2 callback. At this time, we actually need to forward
+ * function call through a `SetTimer()` call to make release it from the ComObj.
+ * 
+ * Example: `FormSubmitHandler()` is the callback, if we tried to call `MyWindow.GetFormData()`
+ * from the callback, it actually stalls out and does not execute properly.
+ * 
+ * I will continue working on a better way to handle these
+**/
+;There's something weird about calling WebViewToo methods from within
+;a WebView2 callback. At this time, we actually need to forward the function
+;through a `SetTimer()` call to make it asynchronous and allow it to work
+;
+FormSubmitHandler(WebView, Form) => SetTimer((*) => FormSubmitEvent(WebView, Form), -1)
+FormSubmitEvent(WebView, Form) {
+    FormInfo := MyWindow.GetFormData(Form)
+    MsgBox(WebViewToo.forEach(FormInfo))
 }
 ;///////////////////////////////////////////////////////////////////////////////////////////
