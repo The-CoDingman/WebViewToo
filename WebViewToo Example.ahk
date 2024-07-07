@@ -1,6 +1,6 @@
 ;Environment Controls
 ;///////////////////////////////////////////////////////////////////////////////////////////
-#Requires Autohotkey v2.1-alpha.1 ;Sorry! You'll have to use the Alpha with this latest version: https://www.autohotkey.com/download/2.1/AutoHotkey_2.1-alpha.1.1.zip
+#Requires Autohotkey v2
 #SingleInstance Force
 #Include AHK Resources/WebView2.ahk
 #Include AHK Resources/WebViewToo.ahk

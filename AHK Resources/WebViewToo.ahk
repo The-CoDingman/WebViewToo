@@ -27,7 +27,7 @@
 ; SOFTWARE.
 ;///////////////////////////////////////////////////////////////////////////////////////////
 
-#Requires AutoHotkey v2.1-alpha.1 ;Sorry! You'll have to use the Alpha with this latest version: https://www.autohotkey.com/download/2.1/AutoHotkey_2.1-alpha.1.1.zip
+#Requires AutoHotkey v2
 #Include WebView2.ahk
 
 class WebViewToo {
@@ -95,6 +95,7 @@ class WebViewToo {
 	static ConvertColor(RGB) => (RGB := RGB ~= "^0x" ? RGB : "0x" RGB, (((RGB & 0xFF) << 16) | (RGB & 0xFF00) | (RGB >> 16 & 0xFF)) << 8 | 0xFF) ;Must be a string
 
     static CreateFileFromResource(ResourceName) { ;Create a file from an installed resource -- works like a dynamic `FileInstall()`
+		ResourceName := StrReplace(ResourceName "/", "\")
         Module := DllCall("GetModuleHandle", "Ptr", 0, "Ptr")
         Resource := DllCall("FindResource", "Ptr", Module, "Str", ResourceName, "UInt", RT_RCDATA := 10, "Ptr")
         ResourceSize := DllCall("SizeofResource", "Ptr", Module, "Ptr", Resource)
@@ -176,20 +177,29 @@ class WebViewToo {
     CustomCaptionBarInit() {
 		this.Gui.Opt("-Caption")
 		this.BorderSize := 1
-		this.Gui.OnMessage(WM_NCHITTEST := 0x0084, (GuiObj, wParam, lParam, Msg) {
-			Critical(-1)
-			GuiObj.GetPos(&gX, &gY, &gWidth, &gHeight)
-			X := lParam << 48 >> 48, Y := lParam << 32 >> 48, HL := X < gX + (this.Gui.BorderSize * 2), HR := X >= gX + gWidth - (this.Gui.BorderSize * 2), HT := Y < gY + (this.Gui.BorderSize * 2), HB := Y >= gy + gHeight - (this.Gui.BorderSize * 2)
-			ReturnCode := HT && HL ? 0xD : HT && HR ? 0xE : HT ? 0xC : HB && HL ? 0x10 : HB && HR ? 0x11 : HB ? 0xF : HL ? 0xA : HR ? 0xB : 0
-			if (ReturnCode)
-				return ReturnCode
-		})
-		this.Gui.OnMessage(WM_NCACTIVATE := 0x0086, (GuiObj, wParam, lParam, Msg) {
-			return 1
-		})
-		this.Gui.OnMessage(WM_NCCALCSIZE := 0x0083, (GuiObj, wParam, lParam, Msg) {
-			return 0
-		})
+		this.Gui.NCHITTEST := (OnMessage(WM_NCHITTEST := 0x0084, WM_NCHITTEST_HANDLER))
+		WM_NCHITTEST_HANDLER(wParam, lParam, Msg, Hwnd) {
+			if (Hwnd = this.Gui.Hwnd) {
+				Critical(-1)
+				this.Gui.GetPos(&gX, &gY, &gWidth, &gHeight)
+				X := lParam << 48 >> 48, Y := lParam << 32 >> 48, HL := X < gX + (this.Gui.BorderSize * 2), HR := X >= gX + gWidth - (this.Gui.BorderSize * 2), HT := Y < gY + (this.Gui.BorderSize * 2), HB := Y >= gy + gHeight - (this.Gui.BorderSize * 2)
+				ReturnCode := HT && HL ? 0xD : HT && HR ? 0xE : HT ? 0xC : HB && HL ? 0x10 : HB && HR ? 0x11 : HB ? 0xF : HL ? 0xA : HR ? 0xB : 0
+				if (ReturnCode)
+					return ReturnCode
+			}
+		}
+		this.Gui.NCACTIVATE := (OnMessage(WM_NCACTIVATE := 0x0086, WM_NCACTIVATE_HANDLER))
+		WM_NCACTIVATE_HANDLER(wParam, lParam, Msg, Hwnd) {
+			if (Hwnd = this.Gui.Hwnd) {
+				return 1
+			}
+		}
+		this.Gui.NACCALCSIZE := (OnMessage(WM_NCCALSIZE := 0x0083, WM_NCCALCSIZE_HANDLER))
+		WM_NCCALCSIZE_HANDLER(wParam, lParam, Msg, Hwnd) {
+			if (Hwnd = this.Gui.Hwnd) {
+				return 0
+			}
+		}
 		DllCall("Dwmapi.dll\DwmSetWindowAttribute", "Ptr", this.Gui.Hwnd, "UInt", DWMWA_WINDOW_CORNER_PREFERENCE := 33, "Ptr*", pvAttribute := 2, "UInt", 4) ;May not work or even cause errors on Win10
 	}
 

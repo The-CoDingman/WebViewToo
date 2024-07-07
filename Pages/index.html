@@ -66,14 +66,6 @@
 			}
 			/* End Web-based TitleBar */
 
-			.borderBox {
-				border-width: 3px;
-				border-style: solid;
-				width: 100%;
-				height: 100%;
-				position: absolute;
-			}
-
 			.bd-placeholder-img {
 				font-size: 1.125rem;
 				text-anchor: middle;
@@ -196,39 +188,9 @@
 					}
 				}
 			}
-
-			//setInterval(updateBorder, 50);
-			function updateBorder() {
-				var currRadius = document.getElementsByClassName("borderBox")[0].style.borderRadius;
-				if (!currRadius) {
-					document.getElementsByClassName("borderBox")[0].style.borderRadius = "0%";
-				}
-				else {
-					currRadius = Number(currRadius.replace("%", ""));
-					if (document.getElementsByClassName("borderBox")[0].dataset.direction == "up") {
-						if (currRadius < 50) {
-							currRadius += 2;
-						}
-						else {
-							document.getElementsByClassName("borderBox")[0].dataset.direction = "down";
-						}
-					}
-					else {
-						if (currRadius > 0) {
-							currRadius -= 2;
-						}
-						else {
-							document.getElementsByClassName("borderBox")[0].dataset.direction = "up";
-						}
-					}
-					document.getElementsByClassName("borderBox")[0].style.borderRadius = currRadius + "%";
-				}
-			}
 		</script>
 	</head>
 	<body class="bg-body-tertiary">
-		<!-- wrap this around everything for a fun effect with the JS included above <div class="borderBox bg-body-tertiary" data-direction="up"></div> -->
-	
 		<div class="ahk-titleBar d-flex align-items-stretch">
 			<span class="flex-grow-1 px-2 py-1" onmousedown="ahk.DragWindow()">WebViewToo Example</span>
 			<span class="ahk-title-btn" onclick="ahk.Minimize()">0</span>
