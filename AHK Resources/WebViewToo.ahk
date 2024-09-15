@@ -96,13 +96,14 @@ class WebViewToo {
 
     static CreateFileFromResource(ResourceName) { ;Create a file from an installed resource -- works like a dynamic `FileInstall()`
 		ResourceName := StrReplace(ResourceName, "/", "\")
+        SplitPath(ResourceName, &OutFileName, &OutDir, &OutExt)
+		ResourceType := OutExt = "bmp" || OutExt = "dib" ? 2 : OutExt = "ico" ? 14 : OutExt = "htm" || OutExt = "html" || OutExt = "mht" ? 23 : OutExt = "manifest" ? 24 : 10
         Module := DllCall("GetModuleHandle", "Ptr", 0, "Ptr")
-        Resource := DllCall("FindResource", "Ptr", Module, "Str", ResourceName, "UInt", RT_RCDATA := 10, "Ptr")
+        Resource := DllCall("FindResource", "Ptr", Module, "Str", ResourceName, "UInt", ResourceType, "Ptr")
         ResourceSize := DllCall("SizeofResource", "Ptr", Module, "Ptr", Resource)
         ResourceData := DllCall("LoadResource", "Ptr", Module, "Ptr", Resource, "Ptr")
         ConvertedData := DllCall("LockResource", "Ptr", ResourceData, "Ptr")
         TextData := StrGet(ConvertedData, ResourceSize, "UTF-8")
-        SplitPath(ResourceName, &OutFileName, &OutDir, &OutExt)
 
         if (!DirExist(WebViewToo.TempDir "\" OutDir)) {
             DirCreate(WebViewToo.TempDir "\" OutDir)
