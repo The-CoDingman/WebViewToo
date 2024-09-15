@@ -62,7 +62,7 @@ class WebViewToo {
     }
 
     static TempDir := A_Temp "\" WebViewToo.UniqueID
-    static DllName := "WebView2Loader_" (A_PtrSize * 8) ".dll"
+    static DllPath := WebViewToo.TempDir "\" (A_PtrSize * 8) "bit\WebView2Loader.dll"
 
     __New(Html := WebViewToo.Template.HTML, CSS := WebViewToo.Template.CSS, JS := WebViewToo.Template.JS, CustomCaption := False) {
         this.Gui := Gui("+Resize")
@@ -72,7 +72,7 @@ class WebViewToo {
         this.Gui.BorderSize := 0, this.MaximizedBorderSize := 7
         this.Gui.Add("Button", "x0 y0 vNCLBUTTONDOWN_Sink Hidden", "John Cena")
         this.Gui.Add("Text", "x" this.BorderSize " y" this.BorderSize " vWebViewTooContainer BackgroundTrans", "If you can see this, something went wrong.")
-        this.wvc := !A_IsCompiled ? WebView2.create(this.Gui["WebViewTooContainer"].Hwnd) : WebView2.create(this.Gui["WebViewTooContainer"].Hwnd,,,,,, WebViewToo.DllName)
+        this.wvc := !A_IsCompiled ? WebView2.create(this.Gui["WebViewTooContainer"].Hwnd) : WebView2.create(this.Gui["WebViewTooContainer"].Hwnd,,,,,, WebViewToo.DllPath)
         this.IsVisible := 1, this.wv := this.wvc.CoreWebView2
         this.Gui.OnEvent("Size", (*) => this.Fill())
         this.AddCallbackToScript("Close", this.Close)
@@ -87,7 +87,7 @@ class WebViewToo {
     }
 
     __Delete() {
-        MsgBox("Deleting Object", "WebViewToo.__Delete()", "262144")
+        ;MsgBox("Deleting Object", "WebViewToo.__Delete()", "262144")
     }
 
     ;-------------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ class WebViewToo {
 	static ConvertColor(RGB) => (RGB := RGB ~= "^0x" ? RGB : "0x" RGB, (((RGB & 0xFF) << 16) | (RGB & 0xFF00) | (RGB >> 16 & 0xFF)) << 8 | 0xFF) ;Must be a string
 
     static CreateFileFromResource(ResourceName) { ;Create a file from an installed resource -- works like a dynamic `FileInstall()`
-		ResourceName := StrReplace(ResourceName "/", "\")
+		ResourceName := StrReplace(ResourceName, "/", "\")
         Module := DllCall("GetModuleHandle", "Ptr", 0, "Ptr")
         Resource := DllCall("FindResource", "Ptr", Module, "Str", ResourceName, "UInt", RT_RCDATA := 10, "Ptr")
         ResourceSize := DllCall("SizeofResource", "Ptr", Module, "Ptr", Resource)
