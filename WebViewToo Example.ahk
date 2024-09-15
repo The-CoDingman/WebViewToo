@@ -11,6 +11,9 @@ GroupAdd("ScriptGroup", "ahk_pid" ScriptPID)
 
 ;Create the WebviewWindow/GUI
 ;///////////////////////////////////////////////////////////////////////////////////////////
+if (A_IsCompiled) {
+    WebViewToo.CreateFileFromResource((A_PtrSize * 8) "bit\WebView2Loader.dll")
+}
 MyWindow := WebViewToo(,,, True) ;You can omit the final parameter or switch 'True' to 'False' to use a Native Window's Titlebar
 MyWindow.OnEvent("Close", (*) => ExitApp())
 MyWindow.Load("Pages/index.html")
@@ -76,4 +79,20 @@ FormSubmitEvent(WebView, Form) {
     FormInfo := MyWindow.GetFormData(Form)
     MsgBox(WebViewToo.forEach(FormInfo))
 }
+;///////////////////////////////////////////////////////////////////////////////////////////
+
+
+;Resources for Compiled Scripts
+;///////////////////////////////////////////////////////////////////////////////////////////
+;@Ahk2Exe-AddResource AHK Resources\32bit\WebView2Loader.dll, 32bit\WebView2Loader.dll
+;@Ahk2Exe-AddResource AHK Resources\64bit\WebView2Loader.dll, 64bit\WebView2Loader.dll
+;@Ahk2Exe-AddResource Pages\index.html, Pages\index.html
+;@Ahk2Exe-AddResource Pages\Bootstrap\bootstrap.bundle.min.js, Pages\Bootstrap\bootstrap.bundle.min.js
+;@Ahk2Exe-AddResource Pages\Bootstrap\bootstrap.min.css, Pages\Bootstrap\bootstrap.min.css
+;@Ahk2Exe-AddResource Pages\Bootstrap\color-modes.js, Pages\Bootstrap\color-modes.js
+;@Ahk2Exe-AddResource Pages\Bootstrap\sidebars.css, Pages\Bootstrap\sidebars.css
+;@Ahk2Exe-AddResource Pages\Bootstrap\sidebars.js, Pages\Bootstrap\sidebars.js
+;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.ttf, Pages\Bootstrap\fonts\glyphicons-halflings-regular.ttf
+;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff, Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff
+;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff2, Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff2
 ;///////////////////////////////////////////////////////////////////////////////////////////
