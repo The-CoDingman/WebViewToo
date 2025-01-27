@@ -2,9 +2,7 @@
 ;///////////////////////////////////////////////////////////////////////////////////////////
 #Requires Autohotkey v2
 #SingleInstance Force
-#Include AHK Resources/WebView2.ahk
-#Include AHK Resources/WebViewToo.ahk
-
+#Include Lib/WebViewToo.ahk
 ScriptPID := DllCall("GetCurrentProcessId")
 GroupAdd("ScriptGroup", "ahk_pid" ScriptPID)
 ;///////////////////////////////////////////////////////////////////////////////////////////
@@ -12,34 +10,42 @@ GroupAdd("ScriptGroup", "ahk_pid" ScriptPID)
 ;Create the WebviewWindow/GUI
 ;///////////////////////////////////////////////////////////////////////////////////////////
 if (A_IsCompiled) {
-    WebViewToo.CreateFileFromResource((A_PtrSize * 8) "bit\WebView2Loader.dll")
+	WebViewToo.CreateFileFromResource((A_PtrSize * 8) "bit\WebView2Loader.dll", WebViewToo.TempDir)
 }
 MyWindow := WebViewToo(,,, True) ;You can omit the final parameter or switch 'True' to 'False' to use a Native Window's Titlebar
+MyWindow.EnableGlobal()
 MyWindow.OnEvent("Close", (*) => ExitApp())
 MyWindow.Load("Pages/index.html")
 MyWindow.Debug()
-MyWindow.AddHostObjectToScript("ahkButtonClick", {func:WebButtonClickEvent})
-MyWindow.AddCallBackToScript("CopyGlyphCode", CopyGlyphCodeEvent)
 MyWindow.AddCallBackToScript("Tooltip", WebTooltipEvent)
-MyWindow.AddCallbackToScript("ahkFormSubmit", FormSubmitHandler)
-MyWindow.Show("w1200 h800 Center", "WebViewToo Example")
+MyWindow.AddCallbackToScript("SubmitForm", SubmitFormHandler)
+MyWindow.AddCallBackToScript("CopyGlyphCode", CopyGlyphCodeEvent)
+MyWindow.AddHostObjectToScript("ButtonClick", {func:WebButtonClickEvent})
+MyWindow.EnableGlobal() ;Opens all native ahk functions and script variables to the Webpage **USE WITH CAUTION**
+MyWindow.Show("w1000 h720 Center", "WebViewToo Example")
 ;///////////////////////////////////////////////////////////////////////////////////////////
 
 ;Hotkeys
 ;///////////////////////////////////////////////////////////////////////////////////////////
 #HotIf WinActive("ahk_group ScriptGroup")
 F1:: {
-    MsgBox(MyWindow.Title)
-    MyWindow.Title := "New Title!"
-    MsgBox(MyWindow.Title)
+	MsgBox(MyWindow.Title)
+	MyWindow.Title := "New Title!"
+	MsgBox(MyWindow.Title)
 }
 
 F2:: {
-    MyWindow.PostWebMessageAsString("Hello?")
+    static Toggle := 0
+    Toggle := !Toggle
+    if (Toggle) {
+	    MyWindow.PostWebMessageAsString("Hello World")
+    } else {
+        MyWindow.PostWebMessageAsJson('{"key1": "value1"}')
+    }
 }
 
 F3:: {
-    MyWindow.SimplePrintToPdf()
+	MyWindow.SimplePrintToPdf()
 }
 #HotIf
 ;///////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +53,7 @@ F3:: {
 ;Web Functions
 ;///////////////////////////////////////////////////////////////////////////////////////////
 WebButtonClickEvent(button) {
-    MsgBox(button)
+	MsgBox(button)
 }
 
 CopyGlyphCodeEvent(WebView, Title) {
@@ -56,36 +62,29 @@ CopyGlyphCodeEvent(WebView, Title) {
 }
 
 WebTooltipEvent(WebView, Msg) {
-    ToolTip(Msg)
-    SetTimer((*) => ToolTip(), -1000)
+	ToolTip(Msg)
+	SetTimer((*) => ToolTip(), -1000)
 }
 
-/**
- * There's something weird about calling WebViewToo methods from within
- * a defined WebView2 callback. At this time, we actually need to forward
- * function call through a `SetTimer()` call to make release it from the ComObj.
- * 
- * Example: `FormSubmitHandler()` is the callback, if we tried to call `MyWindow.GetFormData()`
- * from the callback, it actually stalls out and does not execute properly.
- * 
- * I will continue working on a better way to handle these
-**/
-;There's something weird about calling WebViewToo methods from within
-;a WebView2 callback. At this time, we actually need to forward the function
-;through a `SetTimer()` call to make it asynchronous and allow it to work
-;
-FormSubmitHandler(WebView, Form) => SetTimer((*) => FormSubmitEvent(WebView, Form), -1)
-FormSubmitEvent(WebView, Form) {
-    FormInfo := MyWindow.GetFormData(Form)
-    MsgBox(WebViewToo.forEach(FormInfo))
+SubmitFormHandler(WebView, FormData) {
+	Output := ""
+	Output .= "Email: " FormData.Email "`n"
+	Output .= "Password: " FormData.Password "`n"
+	Output .= "Address: " FormData.Address "`n"
+	Output .= "Address2: " FormData.Address2 "`n"
+	Output .= "City: " FormData.City "`n"
+	Output .= "State: " FormData.State "`n"
+	Output .= "Zip: " FormData.Zip "`n"
+	try Output .=  "Check: " FormData.Check "`n" ;Only works when checked
+	MsgBox(Output)
 }
 ;///////////////////////////////////////////////////////////////////////////////////////////
 
 
 ;Resources for Compiled Scripts
 ;///////////////////////////////////////////////////////////////////////////////////////////
-;@Ahk2Exe-AddResource AHK Resources\32bit\WebView2Loader.dll, 32bit\WebView2Loader.dll
-;@Ahk2Exe-AddResource AHK Resources\64bit\WebView2Loader.dll, 64bit\WebView2Loader.dll
+;@Ahk2Exe-AddResource Lib\32bit\WebView2Loader.dll, 32bit\WebView2Loader.dll
+;@Ahk2Exe-AddResource Lib\64bit\WebView2Loader.dll, 64bit\WebView2Loader.dll
 ;@Ahk2Exe-AddResource Pages\index.html, Pages\index.html
 ;@Ahk2Exe-AddResource Pages\Bootstrap\bootstrap.bundle.min.js, Pages\Bootstrap\bootstrap.bundle.min.js
 ;@Ahk2Exe-AddResource Pages\Bootstrap\bootstrap.min.css, Pages\Bootstrap\bootstrap.min.css
@@ -95,4 +94,5 @@ FormSubmitEvent(WebView, Form) {
 ;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.ttf, Pages\Bootstrap\fonts\glyphicons-halflings-regular.ttf
 ;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff, Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff
 ;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff2, Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff2
+;@Ahk2Exe-AddResource Pages\favicon.png, Pages\favicon.png
 ;///////////////////////////////////////////////////////////////////////////////////////////
