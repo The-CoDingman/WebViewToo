@@ -19,12 +19,14 @@
 		 	properly extracted with a compiled .exe
 			<link href="Bootstrap/fonts/glyphicons-halflings-regular.ttf" rel="stylesheet">
 			<link href="Bootstrap/fonts/glyphicons-halflings-regular.woff" rel="stylesheet">
-			<link href="Bootstrap/fonts/glyphicons-halflings-regular.woff2" rel="stylesheet"> 
+			<link href="Bootstrap/fonts/glyphicons-halflings-regular.woff2" rel="stylesheet">
 		-->
+
+		<link rel="icon" type="image/x-icon" href="/Pages/favicon.png">
 
 		<style>
 			:root {
-				--FauxTitleBarHeight: 32.25px;
+				--FauxTitleBarHeight: calc(33.25px);
 			}
 
 			main {
@@ -35,6 +37,7 @@
 			.ahk-titleBar {
 				cursor: default;
 				user-select: none;
+				/* background-color: #4a525b; */
 			}
 				
 			.ahk-title-btn {
@@ -43,6 +46,10 @@
 				vertical-align: bottom;
 				font-family: Webdings;
 				font-size: 11pt;
+			}
+
+			#ahkTitleBar {
+				-webkit-app-region: drag;
 			}
 						
 			body .ahk-title-btn-restore {
@@ -159,8 +166,8 @@
 				margin-left: 0.5rem;
 			}
 
-			#page-content { 
-  				scrollbar-gutter: stable;
+			#page-content {
+				scrollbar-gutter: stable;
 			}
 
 			.title-icon {
@@ -175,29 +182,30 @@
 		</style>
 
 		<script>
-			function collapsePanel() {
+			function collapsePanel(element) {
 				var navText = document.getElementsByClassName("nav-text");
 				for (i = 0; i < navText.length; i++) {
 					if (navText[i].style.display === "none") {
 						navText[i].style.display = "inline-block";
-						document.getElementById("CollapsePanelLink").innerText = "Collaspe Panel";
+						element.innerText = "Collaspe Panel";
 					}
 					else {
 						navText[i].style.display = "none";
-						document.getElementById("CollapsePanelLink").innerText = "Expand Panel";
+						element.innerText = "Expand Panel";
 					}
 				}
 			}
 		</script>
 	</head>
 	<body class="bg-body-tertiary">
-		<div class="ahk-titleBar d-flex align-items-stretch">
-			<span class="flex-grow-1 px-2 py-1" onmousedown="ahk.DragWindow()">WebViewToo Example</span>
+		<div class="ahk-titleBar d-flex align-items-stretch bg-body-secondary">
+			<span class="flex-grow-1 px-2 py-1" id="ahkTitleBar">WebViewToo Example</span>
 			<span class="ahk-title-btn" onclick="ahk.Minimize()">0</span>
 			<span class='ahk-title-btn ahk-title-btn-maximize' onclick="ahk.Maximize()">1</span>
-			<span class='ahk-title-btn ahk-title-btn-restore' onclick="ahk.Maximize()">2</span>
+			<span class='ahk-title-btn ahk-title-btn-restore' onclick="ahk.Restore()">2</span>
 			<span class="ahk-title-btn ahk-title-btn-close" onclick="ahk.Close()">r</span>
 		</div>
+		<div class="b-example-divider bg-body-tertiary" style="height:1px;"></div>
 
 		<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
 			<symbol id="check2" viewBox="0 0 16 16">
@@ -302,14 +310,14 @@
 				<div class="b-example-divider bg-body-tertiary" style="height:1px;margin:1rem 0;"></div>
 				<div class="dropdown">
 					<a href="#" class="d-flex-1 align-items-center link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-						<img src="https://avatars.githubusercontent.com/u/119650557?v=4" alt="" width="32" height="32" class="rounded-circle ">
+						<img id="UserIcon" src="https://avatars.githubusercontent.com/u/119650557?v=4" alt="" width="32" height="32" class="rounded-circle ">
 						<span id="UserName" class="nav-text"><strong>The-CoDingman</strong></span>
 					</a>
 					<ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-						<li><a class="dropdown-item" href="https://the-codingman.github.io/WebViewToo/WebViewToo.html" target="_blank">Documentation</a></li>
-						<li><a class="dropdown-item" onclick="(function() {obj = window.chrome.webview.hostObjects.launchSecondWindow;obj.func('');})();">Settings</a></li>
+						<li><a class="dropdown-item" href="https://the-codingman.github.io/WebViewToo" target="_blank">Documentation</a></li>
+						<li><a class="dropdown-item" href="#" onclick="ahk.global.MsgBox('You clicked \'Settings\'', 'ahk.global.MsgBox()')">Settings</a></li>
 						<li><a class="dropdown-item" href="#">Profile</a></li>
-						<li><a id="CollapsePanelLink" class="dropdown-item" onclick="collapsePanel()">Collapse Panel</a></li>
+						<li><a class="dropdown-item" href="#" onclick="collapsePanel(this)">Collapse Panel</a></li>
 						<li><hr class="dropdown-divider"></li>
 						<li><a class="dropdown-item" href="#">Sign out</a></li>
 					</ul>
@@ -333,7 +341,7 @@
 									<a class="nav-link active" aria-current="page" href="#">Centered nav only</a>
 									</li>
 									<li class="nav-item">
-									<a class="nav-link" href="https://google.com">Link</a>
+									<a class="nav-link" href="https://www.google.com">Link</a>
 									</li>
 									<li class="nav-item">
 									<a class="nav-link disabled" aria-disabled="true">Disabled</a>
@@ -414,61 +422,56 @@
 					<div class="tab-pane fade" id="v-pills-forms" role="tabpanel" aria-labelledby="v-pills-forms-tab">
 						<div class="tab-container">
 						<h1>Forms!</h1>
-						<form id="Form1" name="Form1" onsubmit="ahkFormSubmit(event);return false;">
+						<form id="Form1" name="Form1" onsubmit="ahk.SubmitForm((() => {return Object.fromEntries(new FormData(this));})());return false;">
 							<div class="form-row">
-							<div class="form-group col-md-6">
-								<label for="inputEmail">Email</label>
-								<input type="email" class="form-control" id="inputEmail" placeholder="Email" required>
-							</div>
-							
-							<div class="form-group col-md-6">
-								<label for="inputPassword">Password</label>
-								<input type="password" class="form-control" id="inputPassword" placeholder="Password" required>
-							</div>
-							</div>
-							
-							<div class="form-group">
-							<label for="inputAddress">Address</label>
-							<input type="text" class="form-control" id="inputAddress" placeholder="1234 Main St">
+								<div class="form-group col-md-6">
+									<label for="Email">Email</label>
+									<input type="email" class="form-control" id="Email" name="Email" placeholder="Email" required>
+								</div>
+								
+								<div class="form-group col-md-6">
+									<label for="Password">Password</label>
+									<input type="password" class="form-control" id="Password" name="Password" placeholder="Password" autocomplete="off" required>
+								</div>
 							</div>
 							
 							<div class="form-group">
-							<label for="inputAddress2">Address 2</label>
-							<input type="text" class="form-control" id="inputAddress2" placeholder="Apartment, studio, or floor">
+								<label for="Address">Address</label>
+								<input type="text" class="form-control" id="Address" name="Address" placeholder="1234 Main St">
+							</div>
+							
+							<div class="form-group">
+								<label for="Address2">Address 2</label>
+								<input type="text" class="form-control" id="Address2" name="Address2" placeholder="Apartment, studio, or floor">
 							</div>
 							
 							<div class="form-row">
-							<div class="form-group col-md-6">
-								<label for="inputCity">City</label>
-								<input type="text" class="form-control" id="inputCity">
-							</div>
-							
-							<div class="form-group col-md-4">
-								<label for="inputState">State</label>
-								<select id="inputState" class="form-control">
-								<option selected>Choose...</option>
-								<option>...</option>
-								</select>
-							</div>
-							
-							<div class="form-group col-md-2">
-								<label for="inputZip">Zip</label>
-								<input type="text" class="form-control" id="inputZip">
-							</div>
+								<div class="form-group col-md-6">
+									<label for="City">City</label>
+									<input type="text" class="form-control" id="City" name="City">
+								</div>
+								
+								<div class="form-group col-md-4">
+									<label for="State">State</label>
+									<select id="State" name="State" class="form-control">
+									<option selected>Choose...</option>
+									<option>...</option>
+									</select>
+								</div>
+								
+								<div class="form-group col-md-2">
+									<label for="Zip">Zip</label>
+									<input type="text" class="form-control" id="Zip" name="Zip">
+								</div>
 							</div>
 							
 							<div class="form-group">
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" id="gridCheck">
-								<label class="form-check-label" for="gridCheck">
-								Check me out
-								</label>
-							</div>
-							</div>
-							
-							<div class="form-group col-md-2">
-								<label for="fileAttachment">Attach Files</label>
-								<input type="file" id="fileAttachment"></input>
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" id="Check" name="Check">
+									<label class="form-check-label" for="Check">
+									Check me out
+									</label>
+								</div>
 							</div>
 							<br>
 							<button type="submit" class="btn btn-primary">Sign in</button>
@@ -745,7 +748,7 @@
 					<!-- v-pills-documentation -->
 					<div class="tab-pane fade" id="v-pills-documentation" role="tabpanel" aria-labelledby="v-pills-documentation-tab">
 						<div class="tab-container">
-							<iframe style='height:calc(100vh - 127px);width:100%;border:0;' src='https://the-codingman.github.io/WebViewToo/WebViewToo.html'></iframe>
+							<iframe style='height:calc(100vh - 127px);width:100%;border:0;' src='https://the-codingman.github.io/WebViewToo'></iframe>
 						</div>
 					</div>
 					<!-- End v-pills-documentation -->
@@ -758,12 +761,6 @@
 		window.chrome.webview.addEventListener('message', ahkWebMessage);
 		function ahkWebMessage(Msg) {
 			console.log(Msg.data);
-			try {
-				eval(Msg.data);
-			}
-			catch(err){
-				console.log("Failed to execute");
-			}
 		}
 
 		function ahkButtonClick(ele) {
@@ -779,13 +776,7 @@
 			else {
 				var eleInfo = ele.outerHTML;
 			}
-			var obj = window.chrome.webview.hostObjects.ahkButtonClick;
-			obj.func(eleInfo);
-		}
-
-		function ahkFormSubmit(Event) {
-			let EventInfo = (Event.target.id != "" || "") ? Event.target.id : (Event.target.name != null || "") ? Event.target.name : Event.target.outerHTML;
-			ahk.ahkFormSubmit(EventInfo);
+			ahk.ButtonClick.Func(eleInfo);
 		}
 	</script>
 </html>
