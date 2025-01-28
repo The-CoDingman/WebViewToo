@@ -94,5 +94,4 @@ SubmitFormHandler(WebView, FormData) {
 ;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.ttf, Pages\Bootstrap\fonts\glyphicons-halflings-regular.ttf
 ;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff, Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff
 ;@Ahk2Exe-AddResource Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff2, Pages\Bootstrap\fonts\glyphicons-halflings-regular.woff2
-;@Ahk2Exe-AddResource Pages\favicon.png, Pages\favicon.png
 ;///////////////////////////////////////////////////////////////////////////////////////////
