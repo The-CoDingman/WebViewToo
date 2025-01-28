@@ -13,7 +13,7 @@ if (A_IsCompiled) {
 	WebViewToo.CreateFileFromResource((A_PtrSize * 8) "bit\WebView2Loader.dll", WebViewToo.TempDir)
 }
 MyWindow := WebViewToo(,,, True) ;You can omit the final parameter or switch 'True' to 'False' to use a Native Window's Titlebar
-MyWindow.EnableGlobal()
+MyWindow.EnableGlobal() ;Opens all native ahk functions and script variables to the Webpage **USE WITH CAUTION**
 MyWindow.OnEvent("Close", (*) => ExitApp())
 MyWindow.Load("Pages/index.html")
 MyWindow.Debug()
@@ -21,7 +21,6 @@ MyWindow.AddCallBackToScript("Tooltip", WebTooltipEvent)
 MyWindow.AddCallbackToScript("SubmitForm", SubmitFormHandler)
 MyWindow.AddCallBackToScript("CopyGlyphCode", CopyGlyphCodeEvent)
 MyWindow.AddHostObjectToScript("ButtonClick", {func:WebButtonClickEvent})
-MyWindow.EnableGlobal() ;Opens all native ahk functions and script variables to the Webpage **USE WITH CAUTION**
 MyWindow.Show("w1000 h720 Center", "WebViewToo Example")
 ;///////////////////////////////////////////////////////////////////////////////////////////
 
