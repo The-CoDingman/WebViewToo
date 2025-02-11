@@ -64,7 +64,6 @@ class WebViewToo {
 	__New(Html := WebViewToo.Template.Html, Css := WebViewToo.Template.Css, JavaScript := WebViewToo.Template.JavaScript, CustomCaption := False) {
 		this.Gui := Gui("+Resize")
 		this.Gui.BackColor := "000000"
-		this.CustomCaption := CustomCaption
 		this.Gui.MarginX := this.Gui.MarginY := 0
 		this.Gui.OnEvent("Size", this.Size.Bind(this))
 		this.LastKnownX := this.LastKnownY := this.LastKnownWidth := this.LastKnownHeight := 0
@@ -79,9 +78,8 @@ class WebViewToo {
 		A_IsCompiled ? (this.EnableInternalLoading()) : 0
 		OnExit(this.OnExit := ObjBindMethod(this, "Destroy"), 1)
 		this.NavigateToString(Format(WebViewToo.Template.Framework, Html, Css, JavaScript))
-		if (this.CustomCaption) {
-			this.CustomCaptionBarInit()
-		}
+		this.Border := CustomCaption ? WebViewToo.Border(this) : 0
+		return this
 	}
 	
 	__Delete() {
@@ -181,150 +179,19 @@ class WebViewToo {
 	;-------------------------------------------------------------------------------------------
 	;WebViewToo class assignments	
 	AddCallbackToScript(CallbackName, Callback) => this.AddHostObjectToScript(CallbackName, Callback.Bind(this)) ;Similar to `AddHostObjectToScript()`, but only registers a callback
-	RemoveCallbackFromScript(CallbackName) => this.RemoveHostObjectFromScript(CallbackName) ;Removes a registered callback
-	BorderColor {
-		get => this.Border.Color
-		set {
-			this.Border.Color := Value
-			if (this.CustomCaption) {
-				this.Border.Gui.BackColor := Value
-			}
-		}
-	}
-	BorderMode {
-		get => this.Border.Mode
-		set {
-			if (!this.CustomCaption) {
-				return
-			}
-
-			OldMode := this.Border.Mode, this.Border.Mode := StrUpper(Value)
-			if (this.Border.Mode = "OUTSET") {
-				this.Border.Offset := 1
-			} else if (this.Border.Mode = "MIDDLE") {
-				this.Border.Offset := this.Border.Size / 2
-			} else if (this.Border.Mode = "INSET") {
-				this.Border.Offset := this.Border.Size
-			} else if (this.Border.Mode = "OFF") {
-				this.BorderHide()
-			}
-			this.BorderShow()
-		}
-	}
-	BorderSize {
-		/**
-		 * A minimum BorderSize of 1 is required when using the CustomCaption
-		 * This is what allows us to resize the window by grabbing the GUI border
-		**/
-		get => this.Border.Size
-		set {
-			this.Border.Size := Value
-			this.BorderMode := this.Border.Mode
-			this.BorderShow()
-		}
-	}
-	BorderTransparency {
-		get => this.Border.Transparency
-		set {
-			WinSetTransparent(this.Border.Transparency := Value, this.Border.Gui.Hwnd)
-		}
-	}
-
-	BorderHide() {
-		WinSetTransparent(0, this.Border.Gui.Hwnd)
-		this.Border.Hidden := 0, this.Border.Gui.Hide()
-		WinSetTransparent(this.Border.Transparency, this.Border.Gui.Hwnd)
-	}
-
-	BorderShow() {
-		if (!GetKeyState("LButton") && (this.Border.Mode != "OFF")) {
-			SetTimer(this.Border.Timer, 0)
-			this.Gui.GetClientPos(&X, &Y, &Width, &Height)
-			this.Border.Hidden := 0, WinSetTransparent(0, this.Border.Gui.Hwnd), this.Border.Gui.Show("NoActivate")
-			this.Border.Gui.Move(X - this.Border.Size + this.Border.Offset, Y - this.Border.Size + this.Border.Offset, Width + (this.Border.Size * 2) - (this.Border.Offset * 2), Height + (this.Border.Size * 2) - (this.Border.Offset * 2))
-			RegionString := Format("0-0 {1}-0 {1}-{2} 0-{2} 0-0 {3}-{3} {4}-{3} {4}-{5} {3}-{5} {3}-{3}", Width + (this.Border.Size * 2), Height + (this.Border.Size * 2), this.Border.Size, Width + this.Border.Size - (this.Border.Offset * 2), Height + this.Border.Size - (this.Border.Offset * 2))
-			WinSetRegion(RegionString, this.Border.Gui.Hwnd)
-			WinSetTransparent(this.BorderTransparency, this.Border.Gui.Hwnd)
-		}
-	}
-	
+	RemoveCallbackFromScript(CallbackName) => this.RemoveHostObjectFromScript(CallbackName) ;Removes a registered callback	
 	Close() {
 		if (!WinExist("ahk_id" this.Hwnd)) {
 			return
 		}
 
-		if (this.CustomCaption) {
+		if (this.Border) {
 			this.Gui.GetPos(&X, &Y, &Width, &Height)
 		} else {
 			this.Gui.GetClientPos(&X, &Y, &Width, &Height)
 		}
 		this.LastKnownX := X, this.LastKnownY := Y, this.LastKnownWidth := Width, this.LastKnownHeight := Height
 		WinClose("ahk_id" this.Hwnd)
-	}
-
-	CustomCaptionBarInit(Redraw := 1) {
-		this.Border := {Gui: Gui("+Resize"), Size: 8, Transparency: 1, Hidden: 0, Mode: "OFF", Color: 0x999999, Timeout: 100, Timer: ObjBindMethod(this, "BorderShow")}
-		this.BorderMode := "MIDDLE"
-		this.Border.Gui.Opt("+Owner" this.Gui.Hwnd)
-		this.Border.Gui.BackColor := this.Border.Color
-		this.Border.Gui.Show("x-1000000 y-1000000 w0 h0 NoActivate")
-		this.CustomCaption := true
-		this.Gui.OnEvent("Close", (*) => this.BorderHide())
-		this.Border.NCHITTEST := (OnMessage(WM_NCHITTEST := 0x0084, WM_NCHITTEST_HANDLER))
-		WM_NCHITTEST_HANDLER(wParam, lParam, Msg, Hwnd) {
-			if ((Hwnd = this.Gui.Hwnd) || (Hwnd = this.Border.Gui.Hwnd)) {
-				Critical(-1)
-				this.Gui.GetPos(&gX, &gY, &gWidth, &gHeight)
-				X := lParam << 48 >> 48, Y := lParam << 32 >> 48, HL := X < gX + (this.Border.Size * 2), HR := X >= gX + gWidth - (this.Border.Size * 2), HT := Y < gY + (this.Border.Size * 2), HB := Y >= gy + gHeight - (this.Border.Size * 2)
-				ReturnCode := HT && HL ? 0xD : HT && HR ? 0xE : HT ? 0xC : HB && HL ? 0x10 : HB && HR ? 0x11 : HB ? 0xF : HL ? 0xA : HR ? 0xB : 0
-				if (ReturnCode)
-					return ReturnCode
-			}
-		}
-		this.Border.NCACTIVATE := (OnMessage(WM_NCACTIVATE := 0x0086, WM_NCACTIVATE_HANDLER))
-		WM_NCACTIVATE_HANDLER(wParam, lParam, Msg, Hwnd) {
-			if ((Hwnd = this.Gui.Hwnd) || (Hwnd = this.Border.Gui.Hwnd)) {
-				return 1
-			}
-		}
-		this.Border.NACCALCSIZE := (OnMessage(WM_NCCALSIZE := 0x0083, WM_NCCALCSIZE_HANDLER))
-		WM_NCCALCSIZE_HANDLER(wParam, lParam, Msg, Hwnd) {
-			if ((Hwnd = this.Gui.Hwnd) || (Hwnd = this.Border.Gui.Hwnd)) {
-				; Fill client area when not maximized, else crop borders to prevent screen overhang.
-				if(!DllCall("IsZoomed", "UPtr", Hwnd)) {
-					return 0
-				}
-				
-				; Query for the window's border size
-				WindowInfo := Buffer(60, 0)
-				NumPut("UInt", 60, WindowInfo), DllCall("GetWindowInfo", "UPtr", Hwnd, "Ptr", WindowInfo)
-				CxWindowBorders := NumGet(WindowInfo, 48, "Int"), CyWindowBorders := NumGet(WindowInfo, 52, "Int")
-				
-				; Inset the client rect by the border size
-				NumPut("Int", NumGet(lParam + 0, "Int") + CxWindowBorders, "Int", NumGet(lParam + 4, "Int") + CyWindowBorders, "Int", NumGet(lParam + 8, "Int") - CxWindowBorders, "Int", NumGet(lParam + 12, "Int") - CyWindowBorders, lParam)
-				return 0
-			}
-		}
-		this.Border.Move := (OnMessage(WM_MOVE := 0x0003, WM_MOVE_HANDLER))
-		WM_MOVE_HANDLER(wParam, lParam, Msg, Hwnd) {
-			if ((Hwnd = this.Gui.Hwnd) && (GetKeyState("LButton")) && (!this.Border.Hidden)) {
-				this.BorderHide()
-				SetTimer(this.Border.Timer, this.Border.Timeout)
-			}
-		}
-		this.Border.NCLBUTTONDOWN := (OnMessage(WM_NCLBUTTONDOWN := 0x00A1, WM_NCLBUTTONDOWN_HANDLER))
-		WM_NCLBUTTONDOWN_HANDLER(wParam, lParam, Msg, Hwnd) {
-			if (Hwnd = this.Border.Gui.Hwnd) {
-				PostMessage(WM_NCLBUTTONDOWN, wParam, lParam, this.Gui.Hwnd)
-				return 0
-			}
-		}
-		DllCall("Dwmapi.dll\DwmSetWindowAttribute", "Ptr", this.Gui.Hwnd, "UInt", DWMWA_WINDOW_CORNER_PREFERENCE := 33, "Ptr*", pvAttribute := 2, "UInt", 4) ;May not work or even cause errors on Win10
-		if (Redraw) {
-			this.GetClientPos(&X, &Y, &Width, &Height)
-			this.Show("x-1000000 y-1000000 w" Width " h" Height (WinActive(this.Hwnd) ? "" : " NoActivate"))
-			this.Move(X, Y, Width, Height)
-		}
 	}
 
 	Debug() {
@@ -408,16 +275,15 @@ class WebViewToo {
 		LastCallTime := A_TickCount
 		SetTimer(TimeoutCheck, -Timeout)
 		if (MinMax = 1) {
-			if (this.CustomCaption) {
-				this.BorderHide()
+			if (this.Border) {
+				this.Border._Hide()
 			}
 			try this.ExecuteScriptAsync("document.body.classList.add('ahk-maximized')")
 		} else if (MinMax != 1) {
 			try this.ExecuteScriptAsync("document.body.classList.remove('ahk-maximized')")
 		}
 		
-		if ((this.CustomCaption) && (MinMax != 1) && (!this.Border.Hidden)) {
-			this.BorderHide()
+		if ((this.Border) && (MinMax != 1)) {
 			SetTimer(this.Border.Timer, this.Border.Timeout)
 		}
 		this.Gui["WebViewTooContainer"].Move(,, Width, Height)
@@ -437,13 +303,12 @@ class WebViewToo {
 			return
 		}
 
+		if (this.Border) {
+			this.Border := this.Border._Destroy()
+		}
 		OnExit(this.OnExit, 0), this.OnExit := 0
 		this.wvc.Close() ;Close the WebView2Controller before destroying the Gui
 		this.Gui.Destroy(), this.Gui := 0
-		if (this.CustomCaption) {
-			this.Border.Gui.Destroy(), this.Border.Gui := 0
-			this.Border := 0
-		}
 	}
 
 	Flash(Blink := True) {
@@ -455,15 +320,15 @@ class WebViewToo {
 	GetPos(Params*) => this.Gui.GetPos(Params*)
 
 	Hide() {
-		if (this.CustomCaption) {
+		if (this.Border) {
 			this.Gui.GetPos(&X, &Y, &Width, &Height)
 		} else {
 			this.Gui.GetClientPos(&X, &Y, &Width, &Height)
 		}
 		this.LastKnownX := X, this.LastKnownY := Y, this.LastKnownWidth := Width, this.LastKnownHeight := Height
 		this.Gui.Hide()
-		if (this.CustomCaption && !this.Border.Hidden) {
-			this.BorderHide()
+		if (this.Border && !this.Border.IsHidden) {
+			this.Border._Hide()
 		}
 	}
 
@@ -494,7 +359,7 @@ class WebViewToo {
 		; AutoHotkey sizes the window incorrectly, trying to account for borders
 		; that aren't actually there. Call the function AHK uses to offset and
 		; apply the change in reverse to get the actual wanted size.
-		if (this.CustomCaption) {
+		if (this.Border) {
 			rect := Buffer(16, 0)
 			DllCall("AdjustWindowRectEx",
 				"Ptr", rect,		; LPRECT lpRect
@@ -505,12 +370,10 @@ class WebViewToo {
 			)
 			Width += (NumGet(rect, 0, "Int") - NumGet(rect, 8, "Int"))
 			Height += (NumGet(rect, 4, "Int") - NumGet(rect, 12, "Int"))
+			SetTimer(this.Border.Timer, this.Border.Timeout)
 		}
 		this.Gui.Title := Title
 		this.Gui.Show(Options " w" Width " h" Height)
-		if (this.CustomCaption) {
-			SetTimer(this.Border.Timer, this.Border.Timeout)
-		}
 	}
 
 	;-------------------------------------------------------------------------------------------
@@ -532,7 +395,7 @@ class WebViewToo {
 	MenuBar {
 		get => this.Gui.MenuBar
 		set {
-			if (!this.CustomCaption) {
+			if (!this.Border) {
 				this.Gui.MenuBar := Value
 			}
 		}
@@ -945,4 +808,173 @@ class WebViewToo {
 	;WebResourceResponseView
 	GetContent(Handler) => this.GetContentHandler := this.wv.GetContent(Handler)
 	*/
+	
+	;-------------------------------------------------------------------------------------------
+	;Subclasses
+	class Border {
+		static Messages := Map("WM_NCHITTEST", 0x0084, "WM_NCACTIVATE", 0x0086, "WM_NCCALCSIZE", 0x0083, "WM_MOVE", 0x0003, "WM_NCLBUTTONDOWN", 0x00A1)
+
+		Color {
+			get => this._Color
+			set {
+				this.Gui.BackColor := this._Color := Value
+			}
+		}
+		IsHidden {
+			get => this._IsHidden
+			set => this._IsHidden := Value
+		}
+		Mode {
+			get => this._Mode
+			set {
+				this._Mode := StrUpper(Value)
+				if (this._Mode = "OUTSET") {
+					this._Offset := 1
+				} else if (this._Mode = "MIDDLE") {
+					this._Offset := this._Size / 2
+				} else if (this._Mode = "INSET") {
+					this._Offset := this._Size
+				} else if (this._Mode = "OFF") {
+					this._Hide()
+				}
+				this._Show()
+			}
+		}
+		Offset {
+			get => this._Offset
+			set => this._Offset := Value
+		}
+		Size {
+			get => this._Size
+			set {
+				this._Size := Value
+				this.Mode := this._Mode
+				this._Show()
+			}
+		}
+		Timeout {
+			get => this._Timeout
+			set => this._Timeout := Value
+		}
+		Transparency {
+			get => this._Transparency
+			set {
+				WinSetTransparent(this._Transparency := Value, this.Gui.Hwnd)
+			}
+		}
+
+		__New(Parent, Redraw := 1) {
+			this.Parent := Parent, this._IsHidden := 0
+			this.Timeout := 100, this.Timer := ObjBindMethod(this, "_Show")
+			this._Size := 8, this._Mode := "MIDDLE", this._Offset := this._Size / 2
+			this.Gui := Gui("+Resize"), this.Gui.Opt("+Owner" this.Parent.Gui.Hwnd)
+			this.Gui.BackColor := this._Color := 0x999999
+			this.Gui.Show("x-1000000 y-1000000 w0 h0 NoActivate")
+			this.Parent.Gui.OnEvent("Close", (*) => this._Hide())
+			WinSetTransparent(this._Transparency := 1, this.Gui.Hwnd)
+			DllCall("Dwmapi.dll\DwmSetWindowAttribute", "Ptr", this.Parent.Gui.Hwnd, "UInt", DWMWA_WINDOW_CORNER_PREFERENCE := 33, "Ptr*", pvAttribute := 2, "UInt", 4) ;May not work or even cause errors on Win10
+			Redraw ? SetTimer((*) => this._Redraw(), -100) : 0
+			for Name, Message in WebViewToo.Border.Messages {
+				OnMessage(Message, this.%Name% := ObjBindMethod(this, "_" Name))
+			}
+			return this
+		}
+
+		__Delete() {
+			;Placeholder
+			MsgBox("Delete Called from WebViewToo.Border")
+		}
+
+		_Destroy() {
+			for Name, Message in WebViewToo.Border.Messages {
+				OnMessage(Message, this.%Name%, 0)
+			}
+			this.Gui.Destroy(), this.Gui := 0, this.Timer := 0
+			this._Redraw(), this.Parent := 0
+			return 0
+		}
+
+		_Hide() {
+			if (!this.Gui) {
+				return
+			}
+
+			WinSetTransparent(0, this.Gui.Hwnd)
+			this.IsHidden := 1, this.Gui.Hide()
+			WinSetTransparent(this.Transparency, this.Gui.Hwnd)
+		}
+
+		_Redraw() {
+			if (!this.Parent.Gui) {
+				return
+			}
+
+			this.Parent.GetPos(&X, &Y, &Width, &Height)
+			this.Parent.Gui.Show("x-1000000 y-1000000 w" Width " h" Height (WinActive(this.Parent.Gui.Hwnd) ? "" : " NoActivate"))
+			this.Parent.Move(X, Y, Width, Height)
+		}
+
+		_Show() {
+			if ((!this.Gui) || GetKeyState("LButton") || (this._Mode = "OFF")) {
+				return
+			}
+
+			SetTimer(this.Timer, 0)
+			this.Parent.Gui.GetClientPos(&X, &Y, &Width, &Height)
+			this.IsHidden := 0, WinSetTransparent(0, this.Gui.Hwnd), this.Gui.Show("NoActivate")
+			this.Gui.Move(X - this.Size + this.Offset, Y - this.Size + this.Offset, Width + (this.Size * 2) - (this.Offset * 2), Height + (this.Size * 2) - (this.Offset * 2))
+			RegionString := Format("0-0 {1}-0 {1}-{2} 0-{2} 0-0 {3}-{3} {4}-{3} {4}-{5} {3}-{5} {3}-{3}", Width + (this.Size * 2), Height + (this.Size * 2), this.Size, Width + this.Size - (this.Offset * 2), Height + this.Size - (this.Offset * 2))
+			WinSetRegion(RegionString, this.Gui.Hwnd)
+			WinSetTransparent(this.Transparency, this.Gui.Hwnd)			
+		}
+
+		_WM_NCHITTEST(wParam, lParam, Msg, Hwnd) {
+			if ((Hwnd = this.Parent.Gui.Hwnd) || (Hwnd = this.Gui.Hwnd)) {
+				Critical(-1)
+				this.Parent.Gui.GetPos(&gX, &gY, &gWidth, &gHeight)
+				X := lParam << 48 >> 48, Y := lParam << 32 >> 48, HL := X < gX + (this.Size * 2), HR := X >= gX + gWidth - (this.Size * 2), HT := Y < gY + (this.Size * 2), HB := Y >= gy + gHeight - (this.Size * 2)
+				ReturnCode := HT && HL ? 0xD : HT && HR ? 0xE : HT ? 0xC : HB && HL ? 0x10 : HB && HR ? 0x11 : HB ? 0xF : HL ? 0xA : HR ? 0xB : 0
+				if (ReturnCode)
+					return ReturnCode
+			}
+		}
+
+		_WM_NCACTIVATE(wParam, lParam, Msg, Hwnd) {
+			if ((Hwnd = this.Parent.Gui.Hwnd) || (Hwnd = this.Gui.Hwnd)) {
+				return 1
+			}
+		}
+
+		_WM_NCCALCSIZE(wParam, lParam, Msg, Hwnd) {
+			if ((Hwnd = this.Parent.Gui.Hwnd) || (Hwnd = this.Gui.Hwnd)) {
+				; Fill client area when not maximized, else crop borders to prevent screen overhang.
+				if (!DllCall("IsZoomed", "UPtr", Hwnd)) {
+					return 0
+				}
+
+				; Query for the window's border size
+				WindowInfo := Buffer(60, 0), NumPut("UInt", 60, WindowInfo)
+				DllCall("GetWindowInfo", "UPtr", Hwnd, "Ptr", WindowInfo)
+				CxWindowBorders := NumGet(WindowInfo, 48, "Int"), CyWindowBorders := NumGet(WindowInfo, 52, "Int")
+
+				; Inset the client rect by the border size
+				NumPut("Int", NumGet(lParam + 0, "Int") + CxWindowBorders, "Int", NumGet(lParam + 4, "Int") + CyWindowBorders, "Int", NumGet(lParam + 8, "Int") - CxWindowBorders, "Int", NumGet(lParam + 12, "Int") - CyWindowBorders, lParam)
+				return 0
+			}
+		}
+
+		_WM_MOVE(wParam, lParam, Msg, Hwnd) {
+			if ((Hwnd = this.Parent.Gui.Hwnd) && (GetKeyState("LButton")) && (!this.IsHidden)) {
+				this._Hide()
+				SetTimer(this.Timer, this.Timeout)
+			}
+		}
+
+		_WM_NCLBUTTONDOWN(wParam, lParam, Msg, Hwnd) {
+			if (Hwnd = this.Gui.Hwnd) {
+				PostMessage(WebViewToo.Border.Messages["WM_NCLBUTTONDOWN"], wParam, lParam, this.Parent.Gui.Hwnd)
+				return 0
+			}
+		}
+	}
 }
