@@ -14,15 +14,8 @@
 
 		<link href="Bootstrap/sidebars.css" rel="stylesheet">
 		<link href="Bootstrap/bootstrap.min.css" rel="stylesheet">
-		<!--	
-			The following resources are added to the page only so they can be
-		 	properly extracted with a compiled .exe
-			<link href="Bootstrap/fonts/glyphicons-halflings-regular.ttf" rel="stylesheet">
-			<link href="Bootstrap/fonts/glyphicons-halflings-regular.woff" rel="stylesheet">
-			<link href="Bootstrap/fonts/glyphicons-halflings-regular.woff2" rel="stylesheet">
-		-->
 
-		<link rel="icon" type="image/x-icon" href="/Pages/favicon.png">
+		<link rel="icon" href="data:image/svg+xml," />
 
 		<style>
 			:root {
@@ -200,10 +193,10 @@
 	<body class="bg-body-tertiary">
 		<div class="ahk-titleBar d-flex align-items-stretch bg-body-secondary">
 			<span class="flex-grow-1 px-2 py-1" id="ahkTitleBar">WebViewToo Example</span>
-			<span class="ahk-title-btn" onclick="ahk.Minimize()">0</span>
-			<span class='ahk-title-btn ahk-title-btn-maximize' onclick="ahk.Maximize()">1</span>
-			<span class='ahk-title-btn ahk-title-btn-restore' onclick="ahk.Restore()">2</span>
-			<span class="ahk-title-btn ahk-title-btn-close" onclick="ahk.Close()">r</span>
+			<span class="ahk-title-btn" onclick="ahk.gui.Minimize()">0</span>
+			<span class='ahk-title-btn ahk-title-btn-maximize' onclick="ahk.gui.Maximize()">1</span>
+			<span class='ahk-title-btn ahk-title-btn-restore' onclick="ahk.gui.Restore()">2</span>
+			<span class="ahk-title-btn ahk-title-btn-close" onclick="ahk.global.WinClose('A')">r</span>
 		</div>
 		<div class="b-example-divider bg-body-tertiary" style="height:1px;"></div>
 
@@ -329,7 +322,7 @@
 			<!-- Page Content -->
 			<div class="flex-grow-1 flex-column bg-body-tertiary overflow-auto" id="page-content" style="padding-left:1rem;padding-right:.25rem;">
 				<div class="sticky-top">
-					<nav class="navbar navbar-expand-lg bg-body-tertiary" aria-label="Tenth navbar example">
+					<nav class="navbar navbar-expand-sm bg-body-tertiary" aria-label="Tenth navbar example">
 						<div class="container-fluid">
 							<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample08" aria-controls="navbarsExample08" aria-expanded="false" aria-label="Toggle navigation">
 								<span class="navbar-toggler-icon"></span>
