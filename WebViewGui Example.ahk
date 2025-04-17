@@ -24,7 +24,6 @@ MyWindow.AddCallbackToScript("SubmitForm", SubmitFormHandler)
 MyWindow.AddCallbackToScript("CopyGlyphCode", CopyGlyphCodeEvent)
 MyWindow.AddHostObjectToScript("ButtonClick", {func: WebButtonClickEvent})
 MyWindow.Show("w800 h600")
-MyWindow.Maximize()
 ;///////////////////////////////////////////////////////////////////////////////////////////
 
 ;Hotkeys
