@@ -1,5 +1,5 @@
 ;///////////////////////////////////////////////////////////////////////////////////////////
-; WebViewToo.ahk v1.0.0-git
+; WebViewToo.ahk v1.0.1-git
 ; Copyright (c) 2025 Ryan Dingman (known also as Panaku, The-CoDingman)
 ; https://github.com/The-CoDingman/WebViewToo
 ;
@@ -418,7 +418,7 @@ class WebViewCtrl extends Gui.Custom {
 
     static Template.Css := "html, body {width: 100%; height: 100%;margin: 0; padding: 0;font-family: sans-serif;} body {display: flex;flex-direction: column;} .main {flex-grow: 1;overflow: hidden;}"
     static Template.Name := "Template.html"
-    static Template.Html := "<iframe style='height:100%;width:100%;border:0;' src='https://the-codingman.github.io/WebViewToo'></iframe>"
+    static Template.Html := "<div style='padding:100px;'>The documentation for <b>WebViewToo</b> is currently being reworked. Sorry for the inconvenience.</div>"
     static Template.JavaScript := ""
 
     static UniqueId => WebViewCtrl.CreateUniqueID()
